@@ -15,7 +15,8 @@
 
 void pn532_init(void);
 uint8_t pn532_poll(void);
-uint8_t pn532_recvAck();
+uint8_t pn532_recvGetFirmwareVersion();
+
 //uint8_t getField(void);
 //uint8_t SAMConfig(void);
 //uint32_t getFirmwareVersion(void);
@@ -26,7 +27,5 @@ uint8_t pn532_recvAck();
 //uint8_t writeMemoryBlock(uint8_t cardnumber /* 1 or 2 */,
 //					uint8_t blockaddress /* 0 to 63 */,
 //					uint8_t* block);
-uint8_t pn532_writeCmdAck(uint8_t * cmd, uint8_t len);
-uint8_t pn532_writeCmd(uint8_t * cmd, uint8_t len);
 
 #endif // PN532_H
