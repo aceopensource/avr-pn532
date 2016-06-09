@@ -125,3 +125,13 @@
 #define PN532_PN532TOHOST                   (0xD5)
 
 #endif // PN532_COMMANDS_H
+
+
+
+
+
+
+
+
+
+
