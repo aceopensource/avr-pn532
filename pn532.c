@@ -151,6 +151,27 @@ uint8_t pn532_powerDown(uint8_t _wakeUpEnable, uint8_t _generateIrq,
 	return(0);
 }
 
+uint8_t pn532_inListPassiveTarget(uint8_t _maxTg, uint8_t _BrTy,
+						uint8_t * _initiatorData, uint8_t _initiatorDataLen,
+						uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	uint8_t len = 3;
+	callback = _callback;
+	pn532_sendBuffer[0] = PN532_COMMAND_INLISTPASSIVETARGET;
+	pn532_sendBuffer[1] = _maxTg;
+	pn532_sendBuffer[2] = _BrTy;
+	if (_initiatorData != NULL)
+	{
+		len = 3 + _initiatorDataLen;
+		for (uint8_t i = 0; i < _initiatorDataLen; i++)
+		{
+			pn532_sendBuffer[3+i] = _initiatorData[i];
+		}
+	}
+	writeCmdAck(pn532_sendBuffer, len);
+	return(0);
+}
+
 /**
  * Reads and validates the Ack
  */
@@ -243,7 +264,7 @@ static uint8_t recvResp()
 	// Collect data checksum
 	checksum = i2c_read_ack();
 	printf("\tData Checksum: %#x\n", checksum);
-	for (int c = 0; c <= pn532_recvLen; c++)
+	for (int c = 0; c < pn532_recvLen; c++)
 	{
 		checksum += pn532_recvBuffer[c];
 	}
