@@ -13,5 +13,8 @@
 // Always prepended with pn532_
 void pn532_init(void);
 uint8_t pn532_poll(void);
-
+uint8_t pn532_getFirmwareVersion(uint8_t (* _callback)(uint8_t *, uint8_t));
+uint8_t pn532_getGeneralStatus(uint8_t (* _callback)(uint8_t *, uint8_t));
+uint8_t pn532_SAMConfiguration(uint8_t _mode, uint8_t _timeout, uint8_t _irq,
+						uint8_t (* _callback)(uint8_t *, uint8_t));
 #endif // PN532_H

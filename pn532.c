@@ -16,6 +16,7 @@ const uint8_t pn532_ack[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 #define PN532_BUFFER_SIZE	16
 uint8_t pn532_sendBuffer[PN532_BUFFER_SIZE];
 uint8_t pn532_recvBuffer[PN532_BUFFER_SIZE];
+uint8_t pn532_recvLen;
 
 // State definitions
 #define PN532_STATE_RESTING 	0x00
@@ -24,11 +25,12 @@ uint8_t pn532_recvBuffer[PN532_BUFFER_SIZE];
 #define PN532_STATE_ACK_READ 	0x03
 #define PN532_STATE_CMD_WAIT 	0x03
 #define PN532_STATE_CMD_AVAIL 	0x04
-#define PN532_STATE_CMD_READ 	0x05
+#define PN532_STATE_CALLBACK 	0x05
 
 // Global variables
 uint8_t state; // The global state for the async library
 volatile uint8_t irqs; // The number of times INT1 is triggered
+uint8_t (*callback)(uint8_t *, uint8_t) = NULL; // Callback function pointer
 
 // Static (internal library use only) methods
 static uint8_t recvAck();
@@ -53,10 +55,6 @@ void pn532_init(void)
 	PORTD |= (1<<PD3); 	// Enable PD3 pull-up resistor
 
 	sei(); // Enable Interrupts
-
-	// Send dummy packet to synchronize on
-//	pn532_sendBuffer[0] = PN532_COMMAND_GETFIRMWAREVERSION;
-//	writeCmdAck(pn532_sendBuffer, 1);
 }
 
 /**
@@ -101,12 +99,44 @@ uint8_t pn532_poll()
 		break;
 	case PN532_STATE_CMD_AVAIL:
 		recvResp();
+		state = PN532_STATE_CALLBACK;
+		break;
+	case PN532_STATE_CALLBACK:
 		state = PN532_STATE_RESTING;
+		callback(pn532_recvBuffer, pn532_recvLen);
 		break;
 	default:
 		printf("Default switch statement reached\n");
 		break;
 	}
+	return(state);
+}
+
+uint8_t pn532_getFirmwareVersion(uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	callback = _callback;
+	pn532_sendBuffer[0] = PN532_COMMAND_GETFIRMWAREVERSION;
+	writeCmdAck(pn532_sendBuffer, 1);
+	return(0);
+}
+
+uint8_t pn532_getGeneralStatus(uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	callback = _callback;
+	pn532_sendBuffer[0] = PN532_COMMAND_GETGENERALSTATUS;
+	writeCmdAck(pn532_sendBuffer, 1);
+	return(0);
+}
+
+uint8_t pn532_SAMConfiguration(uint8_t _mode, uint8_t _timeout, uint8_t _irq,
+						uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	callback = _callback;
+	pn532_sendBuffer[0] = PN532_COMMAND_SAMCONFIGURATION;
+	pn532_sendBuffer[1] = _mode;
+	pn532_sendBuffer[2] = _timeout;
+	pn532_sendBuffer[3] = _irq;
+	writeCmdAck(pn532_sendBuffer, 4);
 	return(0);
 }
 
@@ -190,10 +220,10 @@ static uint8_t recvResp()
 	}
 
 	// Move length value to index 0
-	pn532_recvBuffer[0] = pn532_recvBuffer[4];
+	pn532_recvLen = pn532_recvBuffer[4];
 
 	// Store main message in recv buffer
-	for (int c = 1; c <= pn532_recvBuffer[0]; c++)
+	for (int c = 0; c < pn532_recvLen; c++)
 	{
 		pn532_recvBuffer[c] = i2c_read_ack();
 		printf("\trecv: %#x\n", pn532_recvBuffer[c]);
@@ -202,7 +232,7 @@ static uint8_t recvResp()
 	// Collect data checksum
 	checksum = i2c_read_ack();
 	printf("\tData Checksum: %#x\n", checksum);
-	for (int c = 1; c <= pn532_recvBuffer[0]; c++)
+	for (int c = 0; c <= pn532_recvLen; c++)
 	{
 		checksum += pn532_recvBuffer[c];
 	}
@@ -244,39 +274,39 @@ static uint8_t writeCmdAck(uint8_t * cmd, uint8_t len)
 static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
 {
 	uint8_t checksum;
-	uint8_t output;
+	uint8_t err;
 
 	if (state != 0) // system is busy
 	{
 		return(1);
 	}
 
-	output = 0;
+	err = 0;
 	len = len + 1; // To account for PN532_HOSTTOPN532
 
-	output = i2c_start(PN532_I2C_ADDRESS | I2C_WRITE);
-	output = i2c_write(PN532_PREAMBLE);
-	output = i2c_write(PN532_STARTCODE1);
-	output = i2c_write(PN532_STARTCODE2);
+	err += i2c_start(PN532_I2C_ADDRESS | I2C_WRITE);
+	err += i2c_write(PN532_PREAMBLE);
+	err += i2c_write(PN532_STARTCODE1);
+	err += i2c_write(PN532_STARTCODE2);
 
-	output = i2c_write(len);
+	err += i2c_write(len);
 	checksum = ~len + 1; // Length checksum
-	output = i2c_write(checksum);
+	err += i2c_write(checksum);
 
-	output = i2c_write(PN532_HOSTTOPN532);
+	err += i2c_write(PN532_HOSTTOPN532);
 	checksum = 0xFF;
 	checksum += PN532_HOSTTOPN532;
 
 	for (uint8_t i=0; i < (len-1); i++) {
-		output = i2c_write(cmd[i]);
+		err += i2c_write(cmd[i]);
 		checksum += cmd[i];
 	}
 	checksum = ~checksum;
 
-	output = i2c_write(checksum);
-	output = i2c_write(PN532_POSTAMBLE);
+	err += i2c_write(checksum);
+	err += i2c_write(PN532_POSTAMBLE);
 	i2c_stop();
-	return(0);
+	return(err);
 }
 
 /**
