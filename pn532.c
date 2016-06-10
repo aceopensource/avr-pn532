@@ -66,7 +66,7 @@ void pn532_init(void)
  */
 uint8_t pn532_poll()
 {
-	printf("Polling PN532. IRQ: %d\n", irqs);
+	//printf("Polling PN532. IRQ: %d\n", irqs);
 
 	if (irqs < 0)
 	{
@@ -253,7 +253,7 @@ static uint8_t sendCmdData(uint8_t cmd, uint8_t * data, uint8_t dataLen, uint8_t
  */
 static uint8_t recvAck()
 {
-	printf("Receiving an ack.\n");
+//	printf("Receiving an ack.\n");
 
 	i2c_start(PN532_I2C_ADDRESS | I2C_READ);
 	pn532_recvBuffer[0] = i2c_read_ack();
@@ -269,7 +269,7 @@ static uint8_t recvAck()
 		else
 			pn532_recvBuffer[c] = i2c_read_ack();
 
-		printf("\tack: %#x\n", pn532_recvBuffer[c]);
+//		printf("\tack: %#x\n", pn532_recvBuffer[c]);
 		if (pn532_recvBuffer[c] != pn532_ack[c])
 		{
 			printf("\tAck failed\n");
@@ -277,7 +277,7 @@ static uint8_t recvAck()
 		}
 	}
 	i2c_stop();
-	printf("Ack received successfully.\n");
+//	printf("Ack received successfully.\n");
 	return(0);
 }
 
@@ -290,7 +290,7 @@ static uint8_t recvAck()
 static uint8_t recvResp()
 {
 	uint8_t checksum;
-	printf("Receiving a response\n");
+	//printf("Receiving a response\n");
 	i2c_start(PN532_I2C_ADDRESS | I2C_READ);
 
 	// Gather preamble values
@@ -300,10 +300,10 @@ static uint8_t recvResp()
 	}
 
 	// List preamble values
-	printf("\tReady bit: %#x\n", pn532_recvBuffer[0]);
-	printf("\tPreamble: %#x\n", pn532_recvBuffer[1]);
-	printf("\tStart Code: %#x %#x\n", pn532_recvBuffer[2], pn532_recvBuffer[3]);
-	printf("\tLength: %#x %#x\n", pn532_recvBuffer[4], pn532_recvBuffer[5]);
+//	printf("\tReady bit: %#x\n", pn532_recvBuffer[0]);
+//	printf("\tPreamble: %#x\n", pn532_recvBuffer[1]);
+//	printf("\tStart Code: %#x %#x\n", pn532_recvBuffer[2], pn532_recvBuffer[3]);
+//	printf("\tLength: %#x %#x\n", pn532_recvBuffer[4], pn532_recvBuffer[5]);
 
 	// Check preamble values
 	if (pn532_recvBuffer[0] != 0x1)
@@ -334,17 +334,17 @@ static uint8_t recvResp()
 	for (int c = 0; c < pn532_recvLen; c++)
 	{
 		pn532_recvBuffer[c] = i2c_read_ack();
-		printf("\trecv: %#x\n", pn532_recvBuffer[c]);
+//		printf("\trecv: %#x\n", pn532_recvBuffer[c]);
 	}
 
 	// Collect data checksum
 	checksum = i2c_read_ack();
-	printf("\tData Checksum: %#x\n", checksum);
+//	printf("\tData Checksum: %#x\n", checksum);
 	for (int c = 0; c < pn532_recvLen; c++)
 	{
 		checksum += pn532_recvBuffer[c];
 	}
-	printf("\tData Checksum Result: %#x\n", checksum);
+//	printf("\tData Checksum Result: %#x\n", checksum);
 	if (checksum != 0x00)
 	{
 		printf("Recv failed, bad data checksum\n");
@@ -354,7 +354,7 @@ static uint8_t recvResp()
 	// Skip postamble and end transmission
 	i2c_read_nack();
 	i2c_stop();
-	printf("Received successfully.\n");
+//	printf("Received successfully.\n");
 	return(0);
 }
 
@@ -363,17 +363,16 @@ static uint8_t recvResp()
  */
 static uint8_t writeCmdAck(uint8_t * cmd, uint8_t len)
 {
-	// TODO: make this nonblocking somehow
-	while (state != 0) // already waiting for an ack
+	if (state != 0) // system is busy
 	{
-		_delay_ms(2);
+		return(1);
 	}
 
 	// Write command(s)
 	writeCmd(cmd, len);
 	state = PN532_STATE_ACK_WAIT;
 
-	return(1);
+	return(0);
 }
 
 /**
@@ -389,12 +388,12 @@ static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
 		return(1);
 	}
 
-	printf("Writing command: ");
-	for (uint8_t i = 0; i < len; i++)
-	{
-		printf("%#x, ", cmd[i]);
-	}
-	printf("\n");
+//	printf("Writing command: ");
+//	for (uint8_t i = 0; i < len; i++)
+//	{
+//		printf("%#x, ", cmd[i]);
+//	}
+//	printf("\n");
 
 	err = 0;
 	len = len + 1; // To account for PN532_HOSTTOPN532
