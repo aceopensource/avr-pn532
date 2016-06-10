@@ -7,6 +7,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
+#include <stdarg.h>
 #include "pn532.h"
 #include "i2c.h"
 #include "usart.h"
@@ -37,6 +38,8 @@ static uint8_t recvAck();
 static uint8_t recvResp();
 static uint8_t writeCmdAck(uint8_t * cmd, uint8_t len);
 static uint8_t writeCmd(uint8_t * cmd, uint8_t len);
+static uint8_t sendCmd(uint8_t cmd, uint8_t paramCount, ...);
+static uint8_t sendCmdData(uint8_t cmd, uint8_t * data, uint8_t dataLen, uint8_t argCount, ...);
 
 /**
  * Set up registers for serial and interrupt
@@ -115,16 +118,14 @@ uint8_t pn532_poll()
 uint8_t pn532_getFirmwareVersion(uint8_t (* _callback)(uint8_t *, uint8_t))
 {
 	callback = _callback;
-	pn532_sendBuffer[0] = PN532_COMMAND_GETFIRMWAREVERSION;
-	writeCmdAck(pn532_sendBuffer, 1);
+	sendCmd(PN532_COMMAND_GETFIRMWAREVERSION, 0);
 	return(0);
 }
 
 uint8_t pn532_getGeneralStatus(uint8_t (* _callback)(uint8_t *, uint8_t))
 {
 	callback = _callback;
-	pn532_sendBuffer[0] = PN532_COMMAND_GETGENERALSTATUS;
-	writeCmdAck(pn532_sendBuffer, 1);
+	sendCmd(PN532_COMMAND_GETGENERALSTATUS, 0);
 	return(0);
 }
 
@@ -132,11 +133,7 @@ uint8_t pn532_SAMConfiguration(uint8_t _mode, uint8_t _timeout, uint8_t _irq,
 						uint8_t (* _callback)(uint8_t *, uint8_t))
 {
 	callback = _callback;
-	pn532_sendBuffer[0] = PN532_COMMAND_SAMCONFIGURATION;
-	pn532_sendBuffer[1] = _mode;
-	pn532_sendBuffer[2] = _timeout;
-	pn532_sendBuffer[3] = _irq;
-	writeCmdAck(pn532_sendBuffer, 4);
+	sendCmd(PN532_COMMAND_SAMCONFIGURATION, 3, _mode, _timeout, _irq);
 	return(0);
 }
 
@@ -144,10 +141,17 @@ uint8_t pn532_powerDown(uint8_t _wakeUpEnable, uint8_t _generateIrq,
 						uint8_t (* _callback)(uint8_t *, uint8_t))
 {
 	callback = _callback;
-	pn532_sendBuffer[0] = PN532_COMMAND_POWERDOWN;
-	pn532_sendBuffer[1] = _wakeUpEnable;
-	pn532_sendBuffer[2] = _generateIrq;
-	writeCmdAck(pn532_sendBuffer, 3);
+	sendCmd(PN532_COMMAND_POWERDOWN, 2, _wakeUpEnable, _generateIrq);
+	return(0);
+}
+
+uint8_t pn532_RFConfiguration(uint8_t _cfgItem,
+						uint8_t * _configurationData, uint8_t _configurationDataLen,
+						uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	callback = _callback;
+	sendCmdData(PN532_COMMAND_RFCONFIGURATION, _configurationData, _configurationDataLen,
+				1, _cfgItem);
 	return(0);
 }
 
@@ -155,32 +159,37 @@ uint8_t pn532_inListPassiveTarget(uint8_t _maxTg, uint8_t _BrTy,
 						uint8_t * _initiatorData, uint8_t _initiatorDataLen,
 						uint8_t (* _callback)(uint8_t *, uint8_t))
 {
-	uint8_t len = 3;
 	callback = _callback;
-	pn532_sendBuffer[0] = PN532_COMMAND_INLISTPASSIVETARGET;
-	pn532_sendBuffer[1] = _maxTg;
-	pn532_sendBuffer[2] = _BrTy;
-	if (_initiatorData != NULL)
-	{
-		len = 3 + _initiatorDataLen;
-		for (uint8_t i = 0; i < _initiatorDataLen; i++)
-		{
-			pn532_sendBuffer[3+i] = _initiatorData[i];
-		}
-	}
-	writeCmdAck(pn532_sendBuffer, len);
+	sendCmdData(PN532_COMMAND_INLISTPASSIVETARGET, _initiatorData, _initiatorDataLen,
+				2, _maxTg, _BrTy);
 	return(0);
 }
 
-uint8_t pn532_inATR(uint8_t _tg,
-						uint8_t (* _callback)(uint8_t *, uint8_t))
+uint8_t pn532_inATR(uint8_t _tg, uint8_t (* _callback)(uint8_t *, uint8_t))
 {
-	uint8_t len = 2;
 	callback = _callback;
-	pn532_sendBuffer[0] = PN532_COMMAND_INATR;
-	pn532_sendBuffer[1] = _tg;
-	pn532_sendBuffer[2] = 0;
-	writeCmdAck(pn532_sendBuffer, len);
+	sendCmd(PN532_COMMAND_INATR, 2, _tg, 0x00);
+	return(0);
+}
+
+uint8_t pn532_inSelect(uint8_t _tg, uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	callback = _callback;
+	sendCmd(PN532_COMMAND_INSELECT, 1, _tg);
+	return(0);
+}
+
+uint8_t pn532_inDeselect(uint8_t _tg, uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	callback = _callback;
+	sendCmd(PN532_COMMAND_INDESELECT, 1, _tg);
+	return(0);
+}
+
+uint8_t pn532_inRelease(uint8_t _tg, uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	callback = _callback;
+	sendCmd(PN532_COMMAND_INRELEASE, 1, _tg);
 	return(0);
 }
 
@@ -188,18 +197,46 @@ uint8_t pn532_inDataExchange(uint8_t _tg,
 						uint8_t * _dataOut, uint8_t _dataOutLen,
 						uint8_t (* _callback)(uint8_t *, uint8_t))
 {
-	uint8_t len = 2;
 	callback = _callback;
-	pn532_sendBuffer[0] = PN532_COMMAND_INDATAEXCHANGE;
-	pn532_sendBuffer[1] = _tg;
-	if (_dataOut != NULL)
+	sendCmdData(PN532_COMMAND_INDATAEXCHANGE, _dataOut, _dataOutLen, 1, _tg);
+	return(0);
+}
+
+static uint8_t sendCmd(uint8_t cmd, uint8_t argCount, ...)
+{
+	pn532_sendBuffer[0] = cmd;
+	va_list args;
+	va_start(args, argCount);
+	for (int c = 1; c <= argCount; c++)
 	{
-		len = 2 + _dataOutLen;
-		for (uint8_t i = 0; i < _dataOutLen; i++)
-		{
-			pn532_sendBuffer[2+i] = _dataOut[i];
-		}
+		uint8_t byte = va_arg(args, int);
+		pn532_sendBuffer[c] = byte;
 	}
+	va_end(args);
+	writeCmdAck(pn532_sendBuffer, argCount+1);
+	return(0);
+}
+
+static uint8_t sendCmdData(uint8_t cmd, uint8_t * data, uint8_t dataLen, uint8_t argCount, ...)
+{
+	uint8_t len;
+	pn532_sendBuffer[0] = cmd;
+
+	va_list args;
+	va_start(args, argCount);
+	for (int c = 1; c <= argCount; c++)
+	{
+		uint8_t byte = va_arg(args, int);
+		pn532_sendBuffer[c] = byte;
+	}
+	va_end(args);
+
+	for (uint8_t i = 0; i < dataLen; i++)
+	{
+		pn532_sendBuffer[1+argCount+i] = data[i];
+	}
+
+	len = 1 + argCount + dataLen;
 	writeCmdAck(pn532_sendBuffer, len);
 	return(0);
 }
@@ -344,6 +381,13 @@ static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
 	{
 		return(1);
 	}
+
+	printf("Writing command: ");
+	for (uint8_t i = 0; i < len; i++)
+	{
+		printf("%#x, ", cmd[i]);
+	}
+	printf("\n");
 
 	err = 0;
 	len = len + 1; // To account for PN532_HOSTTOPN532
