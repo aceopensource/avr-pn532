@@ -140,6 +140,17 @@ uint8_t pn532_SAMConfiguration(uint8_t _mode, uint8_t _timeout, uint8_t _irq,
 	return(0);
 }
 
+uint8_t pn532_powerDown(uint8_t _wakeUpEnable, uint8_t _generateIrq,
+						uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	callback = _callback;
+	pn532_sendBuffer[0] = PN532_COMMAND_POWERDOWN;
+	pn532_sendBuffer[1] = _wakeUpEnable;
+	pn532_sendBuffer[2] = _generateIrq;
+	writeCmdAck(pn532_sendBuffer, 3);
+	return(0);
+}
+
 /**
  * Reads and validates the Ack
  */

@@ -46,6 +46,14 @@
 
 #define PN532_WAKEUP                        (0x55)
 
+#define PN532_WAKEON_I2C					(0x80)
+#define PN532_WAKEON_GPIO					(0x40)
+#define PN532_WAKEON_SPI					(0x20)
+#define PN532_WAKEON_HSU					(0x10)
+#define PN532_WAKEON_RF						(0x08)
+#define PN532_WAKEON_INT1					(0x02)
+#define PN532_WAKEON_INT0					(0x01)
+
 #define PN532_SPI_STATREAD                  (0x02)
 #define PN532_SPI_DATAWRITE                 (0x01)
 #define PN532_SPI_DATAREAD                  (0x03)
