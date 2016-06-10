@@ -172,6 +172,38 @@ uint8_t pn532_inListPassiveTarget(uint8_t _maxTg, uint8_t _BrTy,
 	return(0);
 }
 
+uint8_t pn532_inATR(uint8_t _tg,
+						uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	uint8_t len = 2;
+	callback = _callback;
+	pn532_sendBuffer[0] = PN532_COMMAND_INATR;
+	pn532_sendBuffer[1] = _tg;
+	pn532_sendBuffer[2] = 0;
+	writeCmdAck(pn532_sendBuffer, len);
+	return(0);
+}
+
+uint8_t pn532_inDataExchange(uint8_t _tg,
+						uint8_t * _dataOut, uint8_t _dataOutLen,
+						uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	uint8_t len = 2;
+	callback = _callback;
+	pn532_sendBuffer[0] = PN532_COMMAND_INDATAEXCHANGE;
+	pn532_sendBuffer[1] = _tg;
+	if (_dataOut != NULL)
+	{
+		len = 2 + _dataOutLen;
+		for (uint8_t i = 0; i < _dataOutLen; i++)
+		{
+			pn532_sendBuffer[2+i] = _dataOut[i];
+		}
+	}
+	writeCmdAck(pn532_sendBuffer, len);
+	return(0);
+}
+
 /**
  * Reads and validates the Ack
  */
