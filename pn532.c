@@ -115,6 +115,16 @@ uint8_t pn532_poll()
 	return(state);
 }
 
+uint8_t pn532_blockForCallback()
+{
+	while(state != PN532_STATE_RESTING)
+	{
+		_delay_ms(1);
+		pn532_poll();
+	}
+	return(0);
+}
+
 uint8_t pn532_getFirmwareVersion(uint8_t (* _callback)(uint8_t *, uint8_t))
 {
 	callback = _callback;
