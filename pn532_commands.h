@@ -78,6 +78,16 @@
 #define MIFARE_CMD_STORE                    (0xC2)
 #define MIFARE_ULTRALIGHT_CMD_WRITE         (0xA2)
 
+// NTAG21X Commands
+#define NTAG_CMD_GET_VERSION 				(0x60)
+#define NTAG_CMD_READ 						(0x30)
+#define NTAG_CMD_FAST_READ 					(0x3A)
+#define NTAG_CMD_WRITE 						(0xA2)
+#define NTAG_CMD_COMP_WRITE 				(0xA0)
+#define NTAG_CMD_READ_CNT 					(0x39)
+#define NTAG_CMD_PWD_AUTH 					(0x1B)
+#define NTAG_CMD_READ_SIG 					(0x3C)
+
 // Prefixes for NDEF Records (to identify record type)
 #define NDEF_URIPREFIX_NONE                 (0x00)
 #define NDEF_URIPREFIX_HTTP_WWWDOT          (0x01)
