@@ -30,5 +30,7 @@ uint8_t pn532_inRelease(uint8_t _tg, uint8_t (* _callback)(uint8_t *, uint8_t));
 uint8_t pn532_inDataExchange(uint8_t _tg,
 						uint8_t * _dataOut, uint8_t _dataOutLen,
 						uint8_t (* _callback)(uint8_t *, uint8_t));
+uint8_t pn532_inAutoPoll(uint8_t _pollNr, uint8_t _period, uint8_t _type1,
+						uint8_t (* _callback)(uint8_t *, uint8_t));
 
 #endif // PN532_H

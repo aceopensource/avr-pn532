@@ -212,6 +212,14 @@ uint8_t pn532_inDataExchange(uint8_t _tg,
 	return(0);
 }
 
+uint8_t pn532_inAutoPoll(uint8_t _pollNr, uint8_t _period, uint8_t _type1,
+						uint8_t (* _callback)(uint8_t *, uint8_t))
+{
+	callback = _callback;
+	sendCmd(PN532_COMMAND_INAUTOPOLL, 3, _pollNr, _period, _type1);
+	return(0);
+}
+
 /**
  * Sends a command with arguments,
  * used for convenience.
