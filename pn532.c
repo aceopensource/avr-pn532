@@ -202,6 +202,10 @@ uint8_t pn532_inDataExchange(uint8_t _tg,
 	return(0);
 }
 
+/**
+ * Sends a command with arguments,
+ * used for convenience.
+ */
 static uint8_t sendCmd(uint8_t cmd, uint8_t argCount, ...)
 {
 	pn532_sendBuffer[0] = cmd;
@@ -217,6 +221,9 @@ static uint8_t sendCmd(uint8_t cmd, uint8_t argCount, ...)
 	return(0);
 }
 
+/**
+ * Sends a command with arguments, and an arbitrary length data block.
+ */
 static uint8_t sendCmdData(uint8_t cmd, uint8_t * data, uint8_t dataLen, uint8_t argCount, ...)
 {
 	uint8_t len;
@@ -320,7 +327,7 @@ static uint8_t recvResp()
 		return(1); // failed
 	}
 
-	// Move length value to index 0
+	// Move length value to variable
 	pn532_recvLen = pn532_recvBuffer[4];
 
 	// Store main message in recv buffer
