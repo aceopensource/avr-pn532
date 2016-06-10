@@ -1,5 +1,5 @@
 /**
- * PN532 I2C Library
+ * PN532 Asynchronous I2C Library
  * Christopher Bero <berocs@acedb.co>
  */
 
@@ -14,7 +14,7 @@
 
 const uint8_t pn532_ack[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 
-#define PN532_BUFFER_SIZE	16
+#define PN532_BUFFER_SIZE	24
 uint8_t pn532_sendBuffer[PN532_BUFFER_SIZE];
 uint8_t pn532_recvBuffer[PN532_BUFFER_SIZE];
 uint8_t pn532_recvLen;

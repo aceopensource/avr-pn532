@@ -1,5 +1,5 @@
 /**
- * PN532 I2C Library
+ * PN532 Asynchronous I2C Library
  * Christopher Bero <berocs@acedb.co>
  */
 
