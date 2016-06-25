@@ -4,7 +4,7 @@
  */
 
 #ifndef PN532_H
-#define PN532_H
+#define PN532_H 1
 
 // Required header files for public end-use
 #include "pn532_commands.h"
@@ -14,6 +14,8 @@
 void pn532_init(void);
 uint8_t pn532_poll(void);
 uint8_t pn532_blockForCallback();
+uint8_t pn532_blockForAck();
+void pn532_setAckCallback(uint8_t (* _callback)());
 uint8_t pn532_getFirmwareVersion(uint8_t (* _callback)(uint8_t *, uint8_t));
 uint8_t pn532_getGeneralStatus(uint8_t (* _callback)(uint8_t *, uint8_t));
 uint8_t pn532_SAMConfiguration(uint8_t _mode, uint8_t _timeout, uint8_t _irq,
