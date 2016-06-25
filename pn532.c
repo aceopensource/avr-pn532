@@ -37,7 +37,6 @@ uint8_t (*ackCallback)() = NULL; // Ack callback function pointer
 // Static (internal library use only) methods
 static uint8_t recvAck();
 static uint8_t recvResp();
-static uint8_t writeCmdAck(uint8_t * cmd, uint8_t len);
 static uint8_t writeCmd(uint8_t * cmd, uint8_t len);
 static uint8_t sendCmd(uint8_t cmd, uint8_t paramCount, ...);
 static uint8_t sendCmdData(uint8_t cmd, uint8_t * data, uint8_t dataLen, uint8_t argCount, ...);
@@ -262,7 +261,7 @@ static uint8_t sendCmd(uint8_t cmd, uint8_t argCount, ...)
 	}
 	va_end(args);
 
-	return(writeCmdAck(pn532_sendBuffer, argCount+1));
+	return(writeCmd(pn532_sendBuffer, argCount+1));
 }
 
 /**
@@ -293,7 +292,7 @@ static uint8_t sendCmdData(uint8_t cmd, uint8_t * data, uint8_t dataLen, uint8_t
 		pn532_sendBuffer[1+argCount+index] = data[index];
 	}
 
-	return(writeCmdAck(pn532_sendBuffer, len));
+	return(writeCmd(pn532_sendBuffer, len));
 }
 
 /**
@@ -412,21 +411,6 @@ static uint8_t recvResp()
 }
 
 /**
- * Writes a command, and kicks off state machine
- */
-static uint8_t writeCmdAck(uint8_t * cmd, uint8_t len)
-{
-	if (state != PN532_STATE_RESTING) // system is busy
-	{
-		return(1);
-	}
-
-	state = PN532_STATE_ACK_WAIT;
-
-	return(writeCmd(cmd, len));
-}
-
-/**
  * Writes a command to I2C
  */
 static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
@@ -440,6 +424,8 @@ static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
 	{
 		return(state);
 	}
+
+	state = PN532_STATE_ACK_WAIT;
 
 //	printf("Writing command: ");
 //	for (uint8_t i = 0; i < len; i++)
@@ -474,6 +460,7 @@ static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
 	err += i2c_write(checksum);
 	err += i2c_write(PN532_POSTAMBLE);
 	i2c_stop();
+
 	return(err);
 }
 
