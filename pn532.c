@@ -118,9 +118,19 @@ uint8_t pn532_poll()
 	if (irqs > 2)
 	{
 		printf("pn532 variable irqs is weird: %d\n", irqs);
+		irqs = 0;
+		return(1);
 	}
 
 	return(0);
+}
+
+void pn532_recover()
+{
+	cli();
+	state = PN532_STATE_RESTING;
+	irqs = 0;
+	sei();
 }
 
 uint8_t pn532_blockForCallback()
@@ -306,7 +316,11 @@ static uint8_t recvAck()
 	i2c_start(PN532_I2C_ADDRESS | I2C_READ); // Begin i2c read
 
 	// Check 0x01 init byte (only present for i2c connections)
-	pn532_recvBuffer[0] = i2c_read_ack();
+	if (i2c_read_ack(pn532_recvBuffer+0))
+	{
+		printf("\tAck: i2c read failed.\n");
+		return(1);
+	}
 	if (pn532_recvBuffer[0] != 0x1)
 	{
 		printf("\tAck: no 0x1 init byte\n");
@@ -317,9 +331,21 @@ static uint8_t recvAck()
 	for (index = 0; index < 6; index++)
 	{
 		if (index == 5)
-			pn532_recvBuffer[index] = i2c_read_nack();
+		{
+			if (i2c_read_nack(pn532_recvBuffer+index))
+			{
+				printf("\tAck: i2c read failed.\n");
+				return(1);
+			}
+		}
 		else
-			pn532_recvBuffer[index] = i2c_read_ack();
+		{
+			if (i2c_read_ack(pn532_recvBuffer+index))
+			{
+				printf("\tAck: i2c read failed.\n");
+				return(1);
+			}
+		}
 
 		//printf("\tack: %#x\n", pn532_recvBuffer[index]);
 		if (pn532_recvBuffer[index] != pn532_ack[index])
@@ -350,7 +376,11 @@ static uint8_t recvResp()
 	// Gather preamble values
 	for (index = 0; index < 6; index++)
 	{
-		pn532_recvBuffer[index] = i2c_read_ack();
+		if (i2c_read_ack(pn532_recvBuffer+index))
+		{
+			printf("\tRecv: i2c read failed.\n");
+			return(1);
+		}
 	}
 
 	// List preamble values
@@ -387,12 +417,20 @@ static uint8_t recvResp()
 	// Store main message in recv buffer
 	for (index = 0; index < pn532_recvLen; index++)
 	{
-		pn532_recvBuffer[index] = i2c_read_ack();
+		if (i2c_read_ack(pn532_recvBuffer+index))
+		{
+			printf("\tRecv: i2c read failed.\n");
+			return(1);
+		}
 //		printf("Recv: %#x\n", pn532_recvBuffer[index]);
 	}
 
 	// Collect data checksum
-	checksum = i2c_read_ack();
+	if (i2c_read_ack(&checksum))
+	{
+		printf("\tRecv: i2c read failed.\n");
+		return(1);
+	}
 	for (index = 0; index < pn532_recvLen; index++)
 	{
 		checksum += pn532_recvBuffer[index];
@@ -405,7 +443,7 @@ static uint8_t recvResp()
 	}
 
 	// Skip postamble and end transmission
-	i2c_read_nack();
+	i2c_read_nack(NULL);
 	i2c_stop();
 	return(0);
 }
@@ -460,6 +498,11 @@ static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
 	err += i2c_write(checksum);
 	err += i2c_write(PN532_POSTAMBLE);
 	i2c_stop();
+
+	if (err)
+	{
+		i2c_recover();
+	}
 
 	return(err);
 }
