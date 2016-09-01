@@ -23,6 +23,9 @@ uint8_t pn532_SAMConfiguration(uint8_t _mode, uint8_t _timeout, uint8_t _irq,
 						uint8_t (* _callback)(uint8_t *, uint8_t));
 uint8_t pn532_powerDown(uint8_t _wakeUpEnable, uint8_t _generateIrq,
 						uint8_t (* _callback)(uint8_t *, uint8_t));
+uint8_t pn532_RFConfiguration(uint8_t _cfgItem,
+						uint8_t * _configurationData, uint8_t _configurationDataLen,
+						uint8_t (* _callback)(uint8_t *, uint8_t));
 uint8_t pn532_inListPassiveTarget(uint8_t _maxTg, uint8_t _BrTy,
 						uint8_t * _initiatorData, uint8_t _initiatorDataLen,
 						uint8_t (* _callback)(uint8_t *, uint8_t));

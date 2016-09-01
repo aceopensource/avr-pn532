@@ -56,6 +56,7 @@ void pn532_init()
 	EIMSK |= 2; 		// Enable Interrupt Mask for Int1
 	DDRD &= ~(1<<PD3); 	// Set PD3 as input
 	PORTD |= (1<<PD3); 	// Enable PD3 pull-up resistor
+	irqs = 0;
 
 	sei(); // Enable Interrupts
 }
@@ -66,7 +67,7 @@ void pn532_init()
  */
 uint8_t pn532_poll()
 {
-	//printf("Polling PN532. IRQ: %d\n", irqs);
+//	printf("Polling PN532. IRQ: %d, State: %d\n", irqs, state);
 
 	switch(state)
 	{
@@ -90,6 +91,7 @@ uint8_t pn532_poll()
 			ackCallback();
 		}
 		state++; // = PN532_STATE_CMD_WAIT
+//		state = PN532_STATE_CMD_AVAIL; // IRQ replacement
 		break;
 	case PN532_STATE_CMD_WAIT:
 		if (irqs)
@@ -104,6 +106,8 @@ uint8_t pn532_poll()
 			printf("Recv failed.\n");
 			return(1);
 		}
+		else
+			printf("recvResp success.\n");
 		state++; // = PN532_STATE_CALLBACK;
 		break;
 	case PN532_STATE_CALLBACK:
@@ -312,6 +316,7 @@ static uint8_t recvAck()
 {
 	// Variables
 	uint8_t index;
+	uint8_t timeout;
 
 	i2c_start(PN532_I2C_ADDRESS | I2C_READ); // Begin i2c read
 
@@ -326,6 +331,25 @@ static uint8_t recvAck()
 		printf("\tAck: no 0x1 init byte\n");
 		return(1); // ack failed
 	}
+
+	// Non IRQ replacement
+//	timeout = 0;
+//	do
+//	{
+//		if (i2c_read_ack(pn532_recvBuffer+0))
+//		{
+//			printf("\tAck: i2c read failed.\n");
+//			return(1);
+//		}
+//		timeout++;
+//		_delay_ms(1);
+//	} while ((pn532_recvBuffer[0] != 0x1) && timeout < 64);
+//
+//	if (timeout >= 64)
+//	{
+//		printf("ack timeout.\n");
+//		return(1);
+//	}
 
 	// Collect Ack
 	for (index = 0; index < 6; index++)
@@ -347,7 +371,7 @@ static uint8_t recvAck()
 			}
 		}
 
-		//printf("\tack: %#x\n", pn532_recvBuffer[index]);
+//		printf("\tack: %#x\n", pn532_recvBuffer[index]);
 		if (pn532_recvBuffer[index] != pn532_ack[index])
 		{
 			printf("\tAck: data mismatch.\n0x%02X != 0x%02X\n", pn532_recvBuffer[index], pn532_ack[index]);
@@ -370,17 +394,45 @@ static uint8_t recvResp()
 	// Variables
 	uint8_t checksum;
 	uint8_t index;
+	uint16_t timeout;
+	uint16_t timeout_top;
+
+	// Non IRQ replacement
+//	timeout = 0;
+//	timeout_top = 800;
+//	do
+//	{
+//		i2c_start(PN532_I2C_ADDRESS | I2C_READ); // Begin i2c read
+//		if (i2c_read_nack(pn532_recvBuffer+0))
+//		{
+//			printf("\tAck: i2c read failed.\n");
+//			i2c_stop();
+//			return(1);
+//		}
+//		i2c_stop();
+//		timeout++;
+//		_delay_ms(10);
+//	} while ((pn532_recvBuffer[0] != 0x1) && timeout < timeout_top);
+//
+//	if (timeout >= timeout_top)
+//	{
+//		printf("0x1 recvResp timeout.\n");
+//		i2c_stop();
+//		return(1);
+//	}
 
 	i2c_start(PN532_I2C_ADDRESS | I2C_READ); // Begin i2c read
 
 	// Gather preamble values
 	for (index = 0; index < 6; index++)
+//	for (index = 0; index < 5; index++)
 	{
 		if (i2c_read_ack(pn532_recvBuffer+index))
 		{
 			printf("\tRecv: i2c read failed.\n");
 			return(1);
 		}
+//		printf("Val: 0x%02X\n", pn532_recvBuffer[index]);
 	}
 
 	// List preamble values
@@ -396,16 +448,19 @@ static uint8_t recvResp()
 		return(1); // failed
 	}
 	if (pn532_recvBuffer[1] != 0x00)
+//	if (pn532_recvBuffer[0] != 0x00)
 	{
 		printf("Recv: preamble wrong.\n");
 		return(1); // failed
 	}
 	if (pn532_recvBuffer[2] != 0x00 || pn532_recvBuffer[3] != 0xFF)
+//	if (pn532_recvBuffer[1] != 0x00 || pn532_recvBuffer[2] != 0xFF)
 	{
 		printf("Recv: Start code wrong.\n");
 		return(1); // failed
 	}
 	if (((pn532_recvBuffer[4] + pn532_recvBuffer[5]) & 0xFF) != 0x00)
+//	if (((pn532_recvBuffer[3] + pn532_recvBuffer[4]) & 0xFF) != 0x00)
 	{
 		printf("Recv: length checksum wrong.\n");
 		return(1); // failed
@@ -413,6 +468,7 @@ static uint8_t recvResp()
 
 	// Move length value to variable
 	pn532_recvLen = pn532_recvBuffer[4];
+//	pn532_recvLen = pn532_recvBuffer[3];
 
 	// Store main message in recv buffer
 	for (index = 0; index < pn532_recvLen; index++)
@@ -458,12 +514,13 @@ static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
 	uint8_t err;
 	uint8_t index;
 
-	if (state && state != PN532_STATE_ACK_WAIT) // system is busy
+	if (state && state != PN532_STATE_RESTING) //PN532_STATE_ACK_WAIT) // system is busy
 	{
 		return(state);
 	}
 
 	state = PN532_STATE_ACK_WAIT;
+//	state = PN532_STATE_ACK_AVAIL;
 
 //	printf("Writing command: ");
 //	for (uint8_t i = 0; i < len; i++)
