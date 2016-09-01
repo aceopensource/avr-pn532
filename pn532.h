@@ -9,9 +9,11 @@
 // Required header files for public end-use
 #include "pn532_commands.h"
 
+extern uint8_t pn532_async;
+
 // Public (external usage) functions
 // Always prepended with pn532_
-void pn532_init(void);
+void pn532_init(uint8_t async);
 void pn532_recover();
 uint8_t pn532_poll(void);
 uint8_t pn532_blockForCallback();

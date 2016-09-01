@@ -14,6 +14,8 @@
 
 const uint8_t pn532_ack[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 
+uint8_t pn532_async;
+
 #define PN532_BUFFER_SIZE	24
 uint8_t pn532_sendBuffer[PN532_BUFFER_SIZE];
 uint8_t pn532_recvBuffer[PN532_BUFFER_SIZE];
@@ -44,21 +46,27 @@ static uint8_t sendCmdData(uint8_t cmd, uint8_t * data, uint8_t dataLen, uint8_t
 /**
  * Set up registers for serial and interrupt
  */
-void pn532_init()
+void pn532_init(uint8_t async)
 {
 	// Set initial state
 	state = PN532_STATE_RESTING;
 
-	cli(); // Disable interrupts
+	// Set async
+	pn532_async = async;
 
-	// Setup INT1
-	EICRA |= (1<<ISC11) | (0<<ISC10); // Trigger INT1 on falling edge
-	EIMSK |= 2; 		// Enable Interrupt Mask for Int1
-	DDRD &= ~(1<<PD3); 	// Set PD3 as input
-	PORTD |= (1<<PD3); 	// Enable PD3 pull-up resistor
-	irqs = 0;
+	if (pn532_async)
+	{
+		cli(); // Disable interrupts
 
-	sei(); // Enable Interrupts
+		// Setup INT1
+		EICRA |= (1<<ISC11) | (0<<ISC10); // Trigger INT1 on falling edge
+		EIMSK |= 2; 		// Enable Interrupt Mask for Int1
+		DDRD &= ~(1<<PD3); 	// Set PD3 as input
+		PORTD |= (1<<PD3); 	// Enable PD3 pull-up resistor
+		irqs = 0;
+
+		sei(); // Enable Interrupts
+	}
 }
 
 /**
@@ -90,8 +98,14 @@ uint8_t pn532_poll()
 		{
 			ackCallback();
 		}
-		state++; // = PN532_STATE_CMD_WAIT
-//		state = PN532_STATE_CMD_AVAIL; // IRQ replacement
+		if (pn532_async)
+		{
+			state++; // = PN532_STATE_CMD_WAIT
+		}
+		else
+		{
+			state = PN532_STATE_CMD_AVAIL; // IRQ replacement
+		}
 		break;
 	case PN532_STATE_CMD_WAIT:
 		if (irqs)
@@ -316,7 +330,6 @@ static uint8_t recvAck()
 {
 	// Variables
 	uint8_t index;
-	uint8_t timeout;
 
 	i2c_start(PN532_I2C_ADDRESS | I2C_READ); // Begin i2c read
 
@@ -333,23 +346,27 @@ static uint8_t recvAck()
 	}
 
 	// Non IRQ replacement
-//	timeout = 0;
-//	do
-//	{
-//		if (i2c_read_ack(pn532_recvBuffer+0))
-//		{
-//			printf("\tAck: i2c read failed.\n");
-//			return(1);
-//		}
-//		timeout++;
-//		_delay_ms(1);
-//	} while ((pn532_recvBuffer[0] != 0x1) && timeout < 64);
-//
-//	if (timeout >= 64)
-//	{
-//		printf("ack timeout.\n");
-//		return(1);
-//	}
+	if (!pn532_async)
+	{
+		uint8_t timeout;
+		timeout = 0;
+		do
+		{
+			if (i2c_read_ack(pn532_recvBuffer+0))
+			{
+				printf("\tAck: i2c read failed.\n");
+				return(1);
+			}
+			timeout++;
+			_delay_ms(1);
+		} while ((pn532_recvBuffer[0] != 0x1) && timeout < 64);
+
+		if (timeout >= 64)
+		{
+			printf("ack timeout.\n");
+			return(1);
+		}
+	}
 
 	// Collect Ack
 	for (index = 0; index < 6; index++)
@@ -394,38 +411,41 @@ static uint8_t recvResp()
 	// Variables
 	uint8_t checksum;
 	uint8_t index;
-	uint16_t timeout;
-	uint16_t timeout_top;
 
 	// Non IRQ replacement
-//	timeout = 0;
-//	timeout_top = 800;
-//	do
-//	{
-//		i2c_start(PN532_I2C_ADDRESS | I2C_READ); // Begin i2c read
-//		if (i2c_read_nack(pn532_recvBuffer+0))
-//		{
-//			printf("\tAck: i2c read failed.\n");
-//			i2c_stop();
-//			return(1);
-//		}
-//		i2c_stop();
-//		timeout++;
-//		_delay_ms(10);
-//	} while ((pn532_recvBuffer[0] != 0x1) && timeout < timeout_top);
-//
-//	if (timeout >= timeout_top)
-//	{
-//		printf("0x1 recvResp timeout.\n");
-//		i2c_stop();
-//		return(1);
-//	}
+	if (!pn532_async)
+	{
+		uint16_t timeout;
+		uint16_t timeout_top;
+		timeout = 0;
+		timeout_top = 800;
+		do
+		{
+			i2c_start(PN532_I2C_ADDRESS | I2C_READ); // Begin i2c read
+			if (i2c_read_nack(pn532_recvBuffer+0))
+			{
+				printf("\tAck: i2c read failed.\n");
+				i2c_stop();
+				return(1);
+			}
+			i2c_stop();
+			timeout++;
+			_delay_ms(10);
+		} while ((pn532_recvBuffer[0] != 0x1) && timeout < timeout_top);
+
+		if (timeout >= timeout_top)
+		{
+			printf("0x1 recvResp timeout.\n");
+			i2c_stop();
+			return(1);
+		}
+
+	}
 
 	i2c_start(PN532_I2C_ADDRESS | I2C_READ); // Begin i2c read
 
 	// Gather preamble values
 	for (index = 0; index < 6; index++)
-//	for (index = 0; index < 5; index++)
 	{
 		if (i2c_read_ack(pn532_recvBuffer+index))
 		{
@@ -448,19 +468,16 @@ static uint8_t recvResp()
 		return(1); // failed
 	}
 	if (pn532_recvBuffer[1] != 0x00)
-//	if (pn532_recvBuffer[0] != 0x00)
 	{
 		printf("Recv: preamble wrong.\n");
 		return(1); // failed
 	}
 	if (pn532_recvBuffer[2] != 0x00 || pn532_recvBuffer[3] != 0xFF)
-//	if (pn532_recvBuffer[1] != 0x00 || pn532_recvBuffer[2] != 0xFF)
 	{
 		printf("Recv: Start code wrong.\n");
 		return(1); // failed
 	}
 	if (((pn532_recvBuffer[4] + pn532_recvBuffer[5]) & 0xFF) != 0x00)
-//	if (((pn532_recvBuffer[3] + pn532_recvBuffer[4]) & 0xFF) != 0x00)
 	{
 		printf("Recv: length checksum wrong.\n");
 		return(1); // failed
@@ -468,7 +485,6 @@ static uint8_t recvResp()
 
 	// Move length value to variable
 	pn532_recvLen = pn532_recvBuffer[4];
-//	pn532_recvLen = pn532_recvBuffer[3];
 
 	// Store main message in recv buffer
 	for (index = 0; index < pn532_recvLen; index++)

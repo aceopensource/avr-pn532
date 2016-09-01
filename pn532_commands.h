@@ -142,6 +142,9 @@
 #define PN532_HOSTTOPN532                   (0xD4)
 #define PN532_PN532TOHOST                   (0xD5)
 
+#define PN532_ASYNC							(0x1)
+#define PN532_SYNC							(0x0)
+
 #endif // PN532_COMMANDS_H
 
 
