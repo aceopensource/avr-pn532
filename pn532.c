@@ -41,7 +41,7 @@ static uint8_t recvAck();
 static uint8_t recvResp();
 static uint8_t writeCmd(uint8_t * cmd, uint8_t len);
 static uint8_t sendCmd(uint8_t cmd, uint8_t paramCount, ...);
-static uint8_t sendCmdData(uint8_t cmd, uint8_t * data, uint8_t dataLen, uint8_t argCount, ...);
+static uint8_t sendCmdData(uint8_t cmd, const uint8_t * data, const uint8_t dataLen, uint8_t argCount, ...);
 
 /**
  * Set up registers for serial and interrupt
@@ -370,7 +370,7 @@ uint8_t pn532_inAutoPoll(uint8_t _pollNr, uint8_t _period, uint8_t _type1,
 }
 
 uint8_t pn532_tgInitAsTarget(uint8_t _mode,
-                             uint8_t * _dataOut, uint8_t _dataOutLen,
+                             const uint8_t * _dataOut, const uint8_t _dataOutLen,
                              uint8_t (* _callback)(uint8_t *, uint8_t))
 {
     callback = _callback;
@@ -431,7 +431,7 @@ static uint8_t sendCmd(uint8_t cmd, uint8_t argCount, ...)
  * Sends a command with arguments,
  * and an arbitrary length data block.
  */
-static uint8_t sendCmdData(uint8_t cmd, uint8_t * data, uint8_t dataLen, uint8_t argCount, ...)
+static uint8_t sendCmdData(uint8_t cmd, const uint8_t * data, const uint8_t dataLen, uint8_t argCount, ...)
 {
     // Variables
     uint8_t len;
