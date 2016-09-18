@@ -9,12 +9,31 @@
 // Required header files for public end-use
 #include "pn532_commands.h"
 #include "printf.h"
+//#include <stdio.h>
 
 #ifndef NULL
 #define NULL ((void *) 0)
 #endif
 
+#define true 1
+#define false 0
+
+// Emulation
+#define NDEF_MAX_LENGTH 1282 // 1280
+#define tagWriteable false
+
 extern uint8_t pn532_async;
+
+extern uint8_t ndef_file[];
+extern const uint8_t ndef_file_base_len;
+
+void pn532_tg_setPayloadLength(uint8_t _payload_len);
+int pn532_tg_emulateTag();
+void pn532_tg_setNdefFileLength(uint8_t _ndef_file_len);
+uint8_t pn532_tg_getNdefFileLength();
+void pn532_tg_setNdefBytesFunction(void (* _ndef_next_bytes_ptr)(uint8_t *, uint8_t, uint8_t));
+
+uint8_t pn532_emulateTag(uint8_t _len_payload, void (* _ndef_next_bytes_ptr)(uint8_t *, uint8_t, uint8_t));
 
 // Public (external usage) functions
 // Always prepended with pn532_
@@ -22,6 +41,7 @@ void pn532_init(uint8_t async);
 void pn532_recover();
 uint8_t pn532_poll(void);
 uint8_t pn532_blockForCallback();
+uint8_t pn532_blockForCallback_timeout(uint16_t timeout);
 uint8_t pn532_blockForAck();
 void pn532_setAckCallback(uint8_t (* _callback)());
 uint8_t pn532_getFirmwareVersion(uint8_t (* _callback)(uint8_t *, uint8_t));
