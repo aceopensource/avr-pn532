@@ -109,7 +109,7 @@ void pn532_tg_setPayloadLength(uint8_t _payload_len)
 {
 	payload_len = _payload_len;
 	ndef_file_len = ndef_file_base_len + payload_len - 1; // ndef type byte already counted.
-//	printf(PSTR("ndef file size: %d\n"), ndef_file_len);
+//	printf("ndef file size: %d\n", ndef_file_len);
 	ndef_file[0] = (ndef_file_len & 0xFF00) >> 8;
 	ndef_file[1] = ndef_file_len & 0xFF;
 	ndef_file[4] = payload_len;
@@ -132,108 +132,108 @@ void pn532_tg_setNdefBytesFunction(void (* _ndef_next_bytes_ptr)(uint8_t *, uint
 
 uint8_t pn532_tg_cb_getData(uint8_t * response, uint8_t len)
 {
-    printf(PSTR("callback: tgGetData.\n"));
+    printf("callback: tgGetData.\n");
 
     status = response[2];
-    printf(PSTR("\tstatus: 0x%02X\n"), status);
+    printf("\tstatus: 0x%02X\n", status);
 
-    printf(PSTR("\t"));
+    printf("\t");
     for (int i = 3; i < len; i++)
     {
         rwbuf[i-3] = response[i];
-        printf(PSTR("0x%02X "), response[i]);
+        printf("0x%02X ", response[i]);
     }
-    printf(PSTR("\n"));
+    printf("\n");
 
     if (rwbuf[1] != 0xA4)
 	{
 		return 0;
 	}
 
-    printf(PSTR("\tCLA: 0x%02X\n"), rwbuf[0]);
-    printf(PSTR("\tINS: 0x%02X\n"), rwbuf[1]);
-    printf(PSTR("\tP1:  0x%02X\n"), rwbuf[2]);
-    printf(PSTR("\tP2:  0x%02X\n"), rwbuf[3]);
-    printf(PSTR("\tLc:  0x%02X\n"), rwbuf[4]);
-    printf(PSTR("\tData: "));
+    printf("\tCLA: 0x%02X\n", rwbuf[0]);
+    printf("\tINS: 0x%02X\n", rwbuf[1]);
+    printf("\tP1:  0x%02X\n", rwbuf[2]);
+    printf("\tP2:  0x%02X\n", rwbuf[3]);
+    printf("\tLc:  0x%02X\n", rwbuf[4]);
+    printf("\tData: ");
     for (int i = 5; i < (5+rwbuf[4]); i++)
     {
-        printf(PSTR("0x%02X "), rwbuf[i]);
+        printf("0x%02X ", rwbuf[i]);
     }
-    printf(PSTR("\n\tLe:  0x%02X\n"), rwbuf[5+rwbuf[4]]);
+    printf("\n\tLe:  0x%02X\n", rwbuf[5+rwbuf[4]]);
 
     return 0;
 }
 
 uint8_t pn532_tg_cb_setData(uint8_t * response, uint8_t len)
 {
-    printf(PSTR("callback: tgSetData.\n"));
+    printf("callback: tgSetData.\n");
 
     status = response[2];
-    printf(PSTR("\tstatus: 0x%02X\n"), status);
+    printf("\tstatus: 0x%02X\n", status);
 
     return 0;
 }
 
 uint8_t pn532_tg_cb_initAsTarget(uint8_t * response, uint8_t len)
 {
-    printf(PSTR("tgInitAsTarget. Length: %d\n"), len);
+    printf("tgInitAsTarget. Length: %d\n", len);
     uint8_t mode = response[2];
 
-    printf(PSTR("\tMode: \n\tBaud: "));
+    printf("\tMode: \n\tBaud: ");
     if (mode & (1 << 5))
     {
-        printf(PSTR("424kbps, "));
+        printf("424kbps, ");
     }
     else if (mode & (1 << 4))
     {
-        printf(PSTR("212kbps, "));
+        printf("212kbps, ");
     }
     else
     {
-        printf(PSTR("106kbps, "));
+        printf("106kbps, ");
     }
 
-    printf(PSTR("14443-4: "));
+    printf("14443-4: ");
     if (mode & (1 << 3))
     {
-        printf(PSTR("yes, "));
+        printf("yes, ");
     }
     else
     {
-        printf(PSTR("no, "));
+        printf("no, ");
     }
 
-    printf(PSTR("DEP: "));
+    printf("DEP: ");
     if (mode & (1 << 2))
     {
-        printf(PSTR("yes, "));
+        printf("yes, ");
     }
     else
     {
-        printf(PSTR("no, "));
+        printf("no, ");
     }
 
-    printf(PSTR("Framing type: "));
+    printf("Framing type: ");
     if (mode & (1 << 1))
     {
-        printf(PSTR("FeliCa.\n"));
+        printf("FeliCa.\n");
     }
     else if (mode & (1))
     {
-        printf(PSTR("Active mode.\n"));
+        printf("Active mode.\n");
     }
     else
     {
-        printf(PSTR("Mifare.\n"));
+        printf("Mifare.\n");
     }
 
-    printf(PSTR("\n"));
-    printf(PSTR("Initiator command: \n"));
+    printf("\n");
+    printf("Initiator command: \n");
 
     for (uint8_t i = 3; i < len; i++)
     {
-        printf(PSTR("0x%02X\n"), response[i]);
+        printf("0x%02X\n", response[i]);
     }
 
     return(0);
@@ -273,7 +273,7 @@ void pn532_tg_setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, u
 
 int pn532_tg_emulateTag()
 {
-    printf(PSTR("Initiating as target.\n"));
+    printf("Initiating as target.\n");
     pn532_tgInitAsTarget(0x05, command, 36, pn532_tg_cb_initAsTarget);
     if (pn532_blockForCallback_timeout(20000))
 	{
@@ -282,7 +282,7 @@ int pn532_tg_emulateTag()
 
     //  tagWrittenByInitiator = false;
 
-    printf(PSTR("Entering tg loop.\n"));
+    printf("Entering tg loop.\n");
     while(1)
     {
         //    status = pn532.tgGetData(rwbuf, sizeof(rwbuf));
@@ -298,7 +298,7 @@ int pn532_tg_emulateTag()
 		{
 			_delay_ms(2000);
 			break; // don't continue emulation.. return to main program.
-			printf(PSTR("Initiating as target.\n"));
+			printf("Initiating as target.\n");
 			pn532_tgInitAsTarget(0x05, command, 36, pn532_tg_cb_initAsTarget);
 			pn532_blockForCallback();
 			continue;
@@ -309,18 +309,18 @@ int pn532_tg_emulateTag()
         uint8_t lc = rwbuf[C_APDU_LC];
         uint16_t p1p2_length = ((int16_t) p1 << 8) + p2;
 
-        printf(PSTR("Operation: "));
+        printf("Operation: ");
         switch(rwbuf[C_APDU_INS])
         {
         case ISO7816_SELECT_FILE:
-        	printf(PSTR("select file: "));
+        	printf("select file: ");
             switch(p1)
             {
             case C_APDU_P1_SELECT_BY_ID:
-            	printf(PSTR("select by id\n"));
+            	printf("select by id\n");
                 if(p2 != 0x0c)
                 {
-                    printf(PSTR("C_APDU_P2 != 0x0c\n"));
+                    printf("C_APDU_P2 != 0x0c\n");
                     pn532_tg_setResponse(COMMAND_COMPLETE, rwbuf, &sendlen, 0);
                 }
                 else if(lc == 2 && rwbuf[C_APDU_DATA] == 0xE1 && (rwbuf[C_APDU_DATA+1] == 0x03 || rwbuf[C_APDU_DATA+1] == 0x04))
@@ -341,7 +341,7 @@ int pn532_tg_emulateTag()
                 }
                 break;
             case C_APDU_P1_SELECT_BY_NAME: ; // empty statement
-				printf(PSTR("select by name\n"));
+				printf("select by name\n");
                 const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
                 if(0 == memcmp(ndef_tag_application_name_v2, rwbuf + C_APDU_P2, sizeof(ndef_tag_application_name_v2)))
                 {
@@ -349,22 +349,22 @@ int pn532_tg_emulateTag()
                 }
                 else
                 {
-                    printf(PSTR("function not supported\n"));
+                    printf("function not supported\n");
                     pn532_tg_setResponse(FUNCTION_NOT_SUPPORTED, rwbuf, &sendlen, 0);
                 }
                 break;
             }
             break;
         case ISO7816_READ_BINARY:
-        	printf(PSTR("read binary: "));
+        	printf("read binary: ");
             switch(currentFile)
             {
             case NONE:
-            	printf(PSTR("tag not found\n"));
+            	printf("tag not found\n");
                 pn532_tg_setResponse(TAG_NOT_FOUND, rwbuf, &sendlen, 0);
                 break;
             case CC:
-            	printf(PSTR("cc\n"));
+            	printf("cc\n");
                 if( p1p2_length > NDEF_MAX_LENGTH)
                 {
                     pn532_tg_setResponse(END_OF_FILE_BEFORE_REACHED_LE_BYTES, rwbuf, &sendlen, 0);
@@ -376,28 +376,28 @@ int pn532_tg_emulateTag()
                 }
                 break;
             case NDEF:
-            	printf(PSTR("ndef\n"));
+            	printf("ndef\n");
                 if( p1p2_length > NDEF_MAX_LENGTH)
                 {
                     pn532_tg_setResponse(END_OF_FILE_BEFORE_REACHED_LE_BYTES, rwbuf, &sendlen, 0);
                 }
                 else
                 {
-                	printf(PSTR("memcpy: p1p2_length: %d, lc: %d\n"), p1p2_length, lc);
+                	printf("memcpy: p1p2_length: %d, lc: %d\n", p1p2_length, lc);
 //                    memcpy(rwbuf, ndef_file + p1p2_length, lc);
 //					ndef_next_bytes(p1p2_length, lc);
 					ndef_next_bytes_ptr(rwbuf, p1p2_length, lc);
                     pn532_tg_setResponse(COMMAND_COMPLETE, rwbuf + lc, &sendlen, lc);
 //                    for (int i = 0; i < lc; i++)
 //					{
-//						printf(PSTR("rwbuf[%d]: 0x%02X\n"), i, rwbuf[i]);
+//						printf("rwbuf[%d]: 0x%02X\n", i, rwbuf[i]);
 //					}
                 }
                 break;
             }
             break;
         case ISO7816_UPDATE_BINARY:
-        	printf(PSTR("update binary: "));
+        	printf("update binary: ");
             if(!tagWriteable)
             {
                 pn532_tg_setResponse(FUNCTION_NOT_SUPPORTED, rwbuf, &sendlen, 0);
@@ -422,8 +422,8 @@ int pn532_tg_emulateTag()
             }
             break;
         default:
-			  printf(PSTR("Command not supported!"));
-			  printf(PSTR("0x%02X\n"), rwbuf[C_APDU_INS]);
+			  printf("Command not supported!");
+			  printf("0x%02X\n", rwbuf[C_APDU_INS]);
             pn532_tg_setResponse(FUNCTION_NOT_SUPPORTED, rwbuf, &sendlen, 0);
         }
         //    status = pn532.tgSetData(rwbuf, sendlen);
@@ -434,7 +434,7 @@ int pn532_tg_emulateTag()
         //    }
         for (int i = 0; i < sendlen; i++)
 		{
-			printf(PSTR("tgSetData[%d]: 0x%02X\n"), i, rwbuf[i]);
+			printf("tgSetData[%d]: 0x%02X\n", i, rwbuf[i]);
 		}
         pn532_tgSetData(rwbuf, sendlen, pn532_tg_cb_setData);
         pn532_blockForCallback();

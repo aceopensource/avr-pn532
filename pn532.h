@@ -11,12 +11,21 @@
 #include "printf.h"
 //#include <stdio.h>
 
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
 #ifndef NULL
 #define NULL ((void *) 0)
 #endif
 
+#ifndef true
 #define true 1
+#endif
+
+#ifndef false
 #define false 0
+#endif
 
 // State definitions
 #define PN532_STATE_RESTING 	(0x00)

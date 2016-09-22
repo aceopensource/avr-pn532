@@ -56,10 +56,10 @@ void pn532_init(uint8_t async)
     PORTD |= (1<<PD3); 	// Enable PD3 pull-up resistor
     irqs = 0;
 
-    printf(PSTR("EICRA: 0x%02X\n"), EICRA);
-    printf(PSTR("EIMSK: 0x%02X\n"), EIMSK);
-    printf(PSTR("DDRD: 0x%02X\n"), DDRD);
-    printf(PSTR("PORTD: 0x%02X\n"), PORTD);
+    printf("EICRA: 0x%02X\n", EICRA);
+    printf("EIMSK: 0x%02X\n", EIMSK);
+    printf("DDRD: 0x%02X\n", DDRD);
+    printf("PORTD: 0x%02X\n", PORTD);
 
     sei(); // Enable Interrupts
 //	}
@@ -71,7 +71,7 @@ void pn532_init(uint8_t async)
  */
 uint8_t pn532_poll()
 {
-//	printf(PSTR("Polling PN532. IRQ: %d, State: %d\n"), irqs, state);
+//	printf("Polling PN532. IRQ: %d, State: %d\n", irqs, state);
 
 	if (state == PN532_STATE_RESTING)
 	{
@@ -89,7 +89,7 @@ uint8_t pn532_poll()
 	{
 		if (recvAck())
         {
-            printf(PSTR("Ack failed.\n"));
+            printf("Ack failed.\n");
             return(1);
         }
         if (ackCallback) // TODO: re evaluate this.
@@ -117,11 +117,11 @@ uint8_t pn532_poll()
 	{
 		if (recvResp())
         {
-            printf(PSTR("Recv failed.\n"));
+            printf("Recv failed.\n");
             return(1);
         }
         else
-//            printf(PSTR("recvResp success.\n"));
+//            printf("recvResp success.\n");
         state++; // = PN532_STATE_CALLBACK;
 	}
 	else if (state == PN532_STATE_CALLBACK)
@@ -131,7 +131,7 @@ uint8_t pn532_poll()
 	}
 	else
 	{
-		printf(PSTR("Default switch statement reached. State: 0x%02X\n"), state);
+		printf("Default switch statement reached. State: 0x%02X\n", state);
 	}
 
 //    switch(state)
@@ -148,7 +148,7 @@ uint8_t pn532_poll()
 //    case PN532_STATE_ACK_AVAIL:
 //        if (recvAck())
 //        {
-//            printf(PSTR("Ack failed.\n"));
+//            printf("Ack failed.\n");
 //            return(1);
 //        }
 //        if (ackCallback) // TODO: re evaluate this.
@@ -174,11 +174,11 @@ uint8_t pn532_poll()
 //    case PN532_STATE_CMD_AVAIL:
 //        if (recvResp())
 //        {
-//            printf(PSTR("Recv failed.\n"));
+//            printf("Recv failed.\n");
 //            return(1);
 //        }
 //        else
-//            printf(PSTR("recvResp success.\n"));
+//            printf("recvResp success.\n");
 //        state++; // = PN532_STATE_CALLBACK;
 //        break;
 //    case PN532_STATE_CALLBACK:
@@ -186,13 +186,13 @@ uint8_t pn532_poll()
 //        return(callback(pn532_recvBuffer, pn532_recvLen));
 //        break;
 //    default:
-//        printf(PSTR("Default switch statement reached\n"));
+//        printf("Default switch statement reached\n");
 //        break;
 //    }
 
     if (irqs > 2)
     {
-        printf(PSTR("pn532 variable irqs is weird: %d\n"), irqs);
+        printf("pn532 variable irqs is weird: %d\n", irqs);
         irqs = 0;
         return(1);
     }
@@ -252,7 +252,7 @@ uint8_t pn532_blockForCallback_timeout(uint16_t timeout)
             break;
     }
     OCR1A = 0;
-//    printf(PSTR("time: %d, timeout: %d"), time, timeout);
+//    printf("time: %d, timeout: %d", time, timeout);
     if (time >= timeout)
 	{
 		retval++;
@@ -269,7 +269,7 @@ uint8_t pn532_blockForAck()
     while(state != PN532_STATE_CMD_WAIT)
     {
         _delay_ms(1);
-        //printf(PSTR("state: %#x\n"), state);
+        //printf("state: %#x\n", state);
         if ((retval = pn532_poll()))
             break;
     }
@@ -467,12 +467,12 @@ static uint8_t recvAck()
     // Check 0x01 init byte (only present for i2c connections)
     if (i2c_read_ack(pn532_recvBuffer+0))
     {
-        printf(PSTR("\tAck: i2c read failed.\n"));
+        printf("\tAck: i2c read failed.\n");
         return(1);
     }
     if (pn532_recvBuffer[0] != 0x1)
     {
-        printf(PSTR("\tAck: no 0x1 init byte\n"));
+        printf("\tAck: no 0x1 init byte\n");
         return(1); // ack failed
     }
 
@@ -485,7 +485,7 @@ static uint8_t recvAck()
 //		{
 //			if (i2c_read_ack(pn532_recvBuffer+0))
 //			{
-//				printf(PSTR("\tAck: i2c read failed.\n"));
+//				printf("\tAck: i2c read failed.\n");
 //				return(1);
 //			}
 //			timeout++;
@@ -494,7 +494,7 @@ static uint8_t recvAck()
 //
 //		if (timeout >= 64)
 //		{
-//			printf(PSTR("ack timeout.\n"));
+//			printf("ack timeout.\n");
 //			return(1);
 //		}
 //	}
@@ -506,7 +506,7 @@ static uint8_t recvAck()
         {
             if (i2c_read_nack(pn532_recvBuffer+index))
             {
-                printf(PSTR("\tAck: i2c read failed.\n"));
+                printf("\tAck: i2c read failed.\n");
                 return(1);
             }
         }
@@ -514,15 +514,15 @@ static uint8_t recvAck()
         {
             if (i2c_read_ack(pn532_recvBuffer+index))
             {
-                printf(PSTR("\tAck: i2c read failed.\n"));
+                printf("\tAck: i2c read failed.\n");
                 return(1);
             }
         }
 
-//		printf(PSTR("\tack: %#x\n"), pn532_recvBuffer[index]);
+//		printf("\tack: %#x\n", pn532_recvBuffer[index]);
         if (pn532_recvBuffer[index] != pn532_ack[index])
         {
-            printf(PSTR("\tAck: data mismatch.\n0x%02X != 0x%02X\n"), pn532_recvBuffer[index], pn532_ack[index]);
+            printf("\tAck: data mismatch.\n0x%02X != 0x%02X\n", pn532_recvBuffer[index], pn532_ack[index]);
             return(1); // ack failed
         }
     }
@@ -555,7 +555,7 @@ static uint8_t recvResp()
 //			i2c_start(PN532_I2C_ADDRESS | I2C_READ); // Begin i2c read
 //			if (i2c_read_nack(pn532_recvBuffer+0))
 //			{
-//				printf(PSTR("\tAck: i2c read failed.\n"));
+//				printf("\tAck: i2c read failed.\n");
 //				i2c_stop();
 //				return(1);
 //			}
@@ -566,7 +566,7 @@ static uint8_t recvResp()
 //
 //		if (timeout >= timeout_top)
 //		{
-//			printf(PSTR("0x1 recvResp timeout.\n"));
+//			printf("0x1 recvResp timeout.\n");
 //			i2c_stop();
 //			return(1);
 //		}
@@ -580,37 +580,37 @@ static uint8_t recvResp()
     {
         if (i2c_read_ack(pn532_recvBuffer+index))
         {
-            printf(PSTR("\tRecv: i2c read failed.\n"));
+            printf("\tRecv: i2c read failed.\n");
             return(1);
         }
-//		printf(PSTR("Val: 0x%02X\n"), pn532_recvBuffer[index]);
+//		printf("Val: 0x%02X\n", pn532_recvBuffer[index]);
     }
 
     // List preamble values
-//	printf(PSTR("\tReady bit: %#x\n"), pn532_recvBuffer[0]);
-//	printf(PSTR("\tPreamble: %#x\n"), pn532_recvBuffer[1]);
-//	printf(PSTR("\tStart Code: %#x %#x\n"), pn532_recvBuffer[2], pn532_recvBuffer[3]);
-//	printf(PSTR("\tLength: %#x %#x\n"), pn532_recvBuffer[4], pn532_recvBuffer[5]);
+//	printf("\tReady bit: %#x\n", pn532_recvBuffer[0]);
+//	printf("\tPreamble: %#x\n", pn532_recvBuffer[1]);
+//	printf("\tStart Code: %#x %#x\n", pn532_recvBuffer[2], pn532_recvBuffer[3]);
+//	printf("\tLength: %#x %#x\n", pn532_recvBuffer[4], pn532_recvBuffer[5]);
 
     // Check preamble values
     if (pn532_recvBuffer[0] != 0x1)
     {
-        printf(PSTR("Recv: no 0x01 ready bit.\n"));
+        printf("Recv: no 0x01 ready bit.\n");
         return(1); // failed
     }
     if (pn532_recvBuffer[1] != 0x00)
     {
-        printf(PSTR("Recv: preamble wrong.\n"));
+        printf("Recv: preamble wrong.\n");
         return(1); // failed
     }
     if (pn532_recvBuffer[2] != 0x00 || pn532_recvBuffer[3] != 0xFF)
     {
-        printf(PSTR("Recv: Start code wrong.\n"));
+        printf("Recv: Start code wrong.\n");
         return(1); // failed
     }
     if (((pn532_recvBuffer[4] + pn532_recvBuffer[5]) & 0xFF) != 0x00)
     {
-        printf(PSTR("Recv: length checksum wrong.\n"));
+        printf("Recv: length checksum wrong.\n");
         return(1); // failed
     }
 
@@ -622,26 +622,26 @@ static uint8_t recvResp()
     {
         if (i2c_read_ack(pn532_recvBuffer+index))
         {
-            printf(PSTR("\tRecv: i2c read failed.\n"));
+            printf("\tRecv: i2c read failed.\n");
             return(1);
         }
-//		printf(PSTR("Recv: %#x\n"), pn532_recvBuffer[index]);
+//		printf("Recv: %#x\n", pn532_recvBuffer[index]);
     }
 
     // Collect data checksum
     if (i2c_read_ack(&checksum))
     {
-        printf(PSTR("\tRecv: i2c read failed.\n"));
+        printf("\tRecv: i2c read failed.\n");
         return(1);
     }
     for (index = 0; index < pn532_recvLen; index++)
     {
         checksum += pn532_recvBuffer[index];
     }
-//	printf(PSTR("\tData Checksum Result: %#x\n"), checksum);
+//	printf("\tData Checksum Result: %#x\n", checksum);
     if (checksum != 0x00)
     {
-        printf(PSTR("Recv: bad data checksum.\n"));
+        printf("Recv: bad data checksum.\n");
         return(1); // failed
     }
 
@@ -680,41 +680,41 @@ static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
 
     if (state && state != PN532_STATE_RESTING) //PN532_STATE_ACK_WAIT) // system is busy
     {
-        printf(PSTR("writeCmd: system is busy. state: %d\n"), state);
+        printf("writeCmd: system is busy. state: %d\n", state);
         return(state);
     }
 
     state = PN532_STATE_ACK_WAIT;
 //	state = PN532_STATE_ACK_AVAIL;
 
-//	printf(PSTR("Writing command: "));
+//	printf("Writing command: ");
 //	for (uint8_t i = 0; i < len; i++)
 //	{
-//		printf(PSTR("0x%02X, "), cmd[i]);
+//		printf("0x%02X, ", cmd[i]);
 //	}
-//	printf(PSTR("\n"));
+//	printf("\n");
 
     // Initialize
     err = 0;
     len = len + 1; // To account for PN532_HOSTTOPN532
 
     err += i2c_start(PN532_I2C_ADDRESS | I2C_WRITE);
-//	printf(PSTR("->0x%02X\n"), err);
+//	printf("->0x%02X\n", err);
     err += i2c_write(PN532_PREAMBLE);
-//	printf(PSTR("->0x%02X\n"), err);
+//	printf("->0x%02X\n", err);
     err += i2c_write(PN532_STARTCODE1);
-//	printf(PSTR("->0x%02X\n"), err);
+//	printf("->0x%02X\n", err);
     err += i2c_write(PN532_STARTCODE2);
-//	printf(PSTR("->0x%02X\n"), err);
+//	printf("->0x%02X\n", err);
 
     err += i2c_write(len);
-//	printf(PSTR("->0x%02X\n"), err);
+//	printf("->0x%02X\n", err);
     checksum = ~len + 1; // Length checksum
     err += i2c_write(checksum);
-//	printf(PSTR("->0x%02X\n"), err);
+//	printf("->0x%02X\n", err);
 
     err += i2c_write(PN532_HOSTTOPN532);
-//	printf(PSTR("->0x%02X\n"), err);
+//	printf("->0x%02X\n", err);
     checksum = 0xFF;
     checksum += PN532_HOSTTOPN532;
 
@@ -726,14 +726,14 @@ static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
     checksum = ~checksum;
 
     err += i2c_write(checksum);
-//	printf(PSTR("->0x%02X\n"), err);
+//	printf("->0x%02X\n", err);
     err += i2c_write(PN532_POSTAMBLE);
-//	printf(PSTR("->0x%02X\n"), err);
+//	printf("->0x%02X\n", err);
     i2c_stop();
 
     if (err)
     {
-        printf(PSTR("writeCmd error: %d.\n"), err);
+        printf("writeCmd error: %d.\n", err);
         i2c_recover();
     }
 
@@ -745,7 +745,7 @@ static uint8_t writeCmd(uint8_t * cmd, uint8_t len)
  */
 ISR(INT1_vect)
 {
-//	printf(PSTR("ISR\n"));
+//	printf("ISR\n");
     irqs++;
 }
 
