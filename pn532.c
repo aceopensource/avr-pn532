@@ -651,6 +651,23 @@ static uint8_t recvResp()
     return(0);
 }
 
+uint8_t pn532_cancellCmd()
+{
+	uint8_t err, index;
+	err = 0;
+
+	err += i2c_start(PN532_I2C_ADDRESS | I2C_WRITE);
+
+    for (index = 0; index < (6); index++)
+    {
+        err += i2c_write(pn532_ack[index]);
+    }
+
+    i2c_stop();
+
+    return(err);
+}
+
 /**
  * Writes a command to I2C
  */
