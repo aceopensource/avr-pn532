@@ -18,6 +18,15 @@
 #define true 1
 #define false 0
 
+// State definitions
+#define PN532_STATE_RESTING 	(0x00)
+#define PN532_STATE_ACK_WAIT 	(0x01)
+#define PN532_STATE_ACK_AVAIL 	(0x02)
+#define PN532_STATE_ACK_READ 	(0x03)
+#define PN532_STATE_CMD_WAIT 	(0x03)
+#define PN532_STATE_CMD_AVAIL 	(0x04)
+#define PN532_STATE_CALLBACK 	(0x05)
+
 // Emulation
 #define NDEF_MAX_LENGTH 1282 // 1280
 #define tagWriteable false
@@ -40,6 +49,7 @@ uint8_t pn532_emulateTag(uint8_t _len_payload, void (* _ndef_next_bytes_ptr)(uin
 void pn532_init(uint8_t async);
 void pn532_recover();
 uint8_t pn532_poll(void);
+uint8_t pn532_getState();
 uint8_t pn532_blockForCallback();
 uint8_t pn532_blockForCallback_timeout(uint16_t timeout);
 uint8_t pn532_blockForAck();

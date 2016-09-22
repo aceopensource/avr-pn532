@@ -21,15 +21,6 @@ uint8_t pn532_sendBuffer[PN532_BUFFER_SIZE];
 uint8_t pn532_recvBuffer[PN532_BUFFER_SIZE];
 uint8_t pn532_recvLen;
 
-// State definitions
-#define PN532_STATE_RESTING 	(0x00)
-#define PN532_STATE_ACK_WAIT 	(0x01)
-#define PN532_STATE_ACK_AVAIL 	(0x02)
-#define PN532_STATE_ACK_READ 	(0x03)
-#define PN532_STATE_CMD_WAIT 	(0x03)
-#define PN532_STATE_CMD_AVAIL 	(0x04)
-#define PN532_STATE_CALLBACK 	(0x05)
-
 // Global variables
 static uint8_t state; // The global state for the async library
 volatile uint8_t irqs; // The number of times INT1 is triggered
@@ -226,6 +217,11 @@ uint8_t pn532_emulateTag(uint8_t _len_payload, void (* _ndef_next_bytes_ptr)(uin
 	pn532_tg_emulateTag();
 
 	return(1);
+}
+
+uint8_t pn532_getState()
+{
+	return(state);
 }
 
 uint8_t pn532_blockForCallback()
