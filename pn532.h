@@ -11,9 +11,7 @@
 #include "printf.h"
 //#include <stdio.h>
 
-#ifndef DEBUG
-#define DEBUG 0
-#endif
+#define PN532_DEBUG 0
 
 #ifndef NULL
 #define NULL ((void *) 0)
