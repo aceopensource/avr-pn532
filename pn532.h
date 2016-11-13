@@ -6,12 +6,20 @@
 #ifndef PN532_H
 #define PN532_H 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Required header files for public end-use
 #include "pn532_commands.h"
-#include "printf.h"
-//#include <stdio.h>
 
+// Debugging
 #define PN532_DEBUG 0
+
+#if PN532_DEBUG > 0
+	#include "printf.h"
+	#include "usart.h"
+#endif
 
 #ifndef NULL
 #define NULL ((void *) 0)
@@ -92,5 +100,9 @@ uint8_t pn532_tgSetData(uint8_t * _dataOut, uint8_t _dataOutLen,
 uint8_t pn532_tgResponseToInitiator(uint8_t * _dataOut, uint8_t _dataOutLen,
                                     uint8_t (* _callback)(uint8_t *, uint8_t));
 uint8_t pn532_tgGetInitiatorCommand(uint8_t (* _callback)(uint8_t *, uint8_t));
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // PN532_H

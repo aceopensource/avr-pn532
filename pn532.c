@@ -6,11 +6,11 @@
 // Internal header files
 #include <avr/io.h>
 #include <avr/pgmspace.h>
+#include <avr/interrupt.h>
 #include <util/delay.h>
 #include <stdarg.h>
 #include "pn532.h"
 #include "i2c.h"
-#include "usart.h"
 
 const uint8_t pn532_ack[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 
