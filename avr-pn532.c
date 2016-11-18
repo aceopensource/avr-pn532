@@ -9,8 +9,9 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <stdarg.h>
-#include "pn532.h"
-#include "i2c.h"
+#include "avr-pn532.h"
+#include "avr-i2c.h"
+#include "avr-printf.h"
 
 const uint8_t pn532_ack[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 
