@@ -17,8 +17,8 @@ extern "C" {
 #define PN532_DEBUG 0
 
 #if PN532_DEBUG > 0
-	#include "printf.h"
-	#include "usart.h"
+	#include "avr-printf.h"
+	#include "avr-usart.h"
 #endif
 
 #ifndef NULL
