@@ -169,7 +169,9 @@ uint8_t pn532_tg_cb_setData(uint8_t * response, uint8_t len)
 {
     printf("callback: tgSetData.\n");
 
-    status = response[2];
+    if (len >= 2) // There, now len is used.
+		status = response[2];
+
     printf("\tstatus: 0x%02X\n", status);
 
     return 0;
