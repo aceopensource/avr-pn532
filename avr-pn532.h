@@ -15,7 +15,8 @@ extern "C" {
 
 // Debugging
 #define PN532_DEBUG 0
-#include "printf.h"
+
+#include "avr-printf.h"
 
 #ifndef NULL
 #define NULL ((void *) 0)
