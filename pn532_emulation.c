@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <util/delay.h>
 #include <string.h>
-#include "pn532.h"
+#include "avr-pn532.h"
 
 #ifndef NDEF_MAX_LENGTH
 #define NDEF_MAX_LENGTH 32
