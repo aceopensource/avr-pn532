@@ -4,7 +4,7 @@
  */
 
 #ifndef PN532_H
-#define PN532_H 1
+#define PN532_H
 
 #ifdef __cplusplus
 extern "C" {
