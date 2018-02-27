@@ -6,13 +6,8 @@ Uses polling and function pointer callbacks to operate.
 
 Has a spinwait method to create blocking, synchronous operation.
 
-## Links and References
+### Examples
 
-### Variadic Functions
+Check in [examples/](examples/) for a small proof-of-concept example made for atmega328p and Arduino IDE.
 
-* [http://en.cppreference.com/w/c/language/variadic](http://en.cppreference.com/w/c/language/variadic)
-
-### Function Pointer Callbacks
-
-* [http://www.newty.de/fpt/callback.html](http://www.newty.de/fpt/callback.html)
-
+For a full example of how avr-pn532 can be used out in the wild, see [megadoor](https://github.com/makerslocal/megadoor/tree/testing).
